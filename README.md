@@ -24,7 +24,7 @@ The full research takes 30 to 60 minutes per company. The call that starts it re
 ## Install the skill in Cortex Code
 
 ```bash
-cortex skill add github:amaurynimble/company-intel
+cortex skill add amaurynimble/company-intel
 ```
 
 Then open Cortex Code and type `/company-intel <company name>`. On the first run, the skill finds that the Snowflake objects are missing. It asks for your consent and your Nimble key, then installs everything. The key is stored only in a Snowflake secret.
