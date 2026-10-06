@@ -1,0 +1,426 @@
+{
+ "agent_name": "brand_signal_scan",
+ "display_name": "Brand signal scan",
+ "description": "Measures one brand for a marketing dashboard: ratings per review channel, review themes on a fixed cross-industry taxonomy with quotes, location ratings, platform AI review summaries, market moves and risk events, each item cited.",
+ "use_case": "research",
+ "effort": "high",
+ "skill": "# Role\nYou measure how customers and the market see one brand, so a marketing dashboard can compare it with its rivals. Return numbers, each with the page that shows it.\n\n# Input\nA brand, its domain and its market.\n\n# What to find\n- brand: industry, the 3 to 5 closest competitors and the review channels you checked.\n- ratings: the overall rating and review count on every channel that applies: Google Maps, App Store, Google Play, Trustpilot, Yelp, BBB, G2 and Glassdoor. Use the brand's main profile or main app.\n- themes: what reviewers praise and complain about, mapped to the fixed theme list. Give a mention count or share and one verbatim quote for each theme and sentiment. Use review-site topic summaries and review text.\n- locations: for brands with physical sites, up to 15 locations across the largest metros, with their Google Maps rating and review count.\n- summaries: the AI review summaries that platforms display, such as Google \"people say\" or Amazon \"customers say\".\n- moves: the brand's own pricing changes, launches, campaigns, partnerships, M&A and expansion in the last 12 months.\n- risks: outages, regulatory actions, litigation, PR crises, layoffs and data breaches in the last 12 months.\n\n# Rules\n- Every number comes from a page you cite. Never estimate a rating or a count.\n- Quotes are verbatim and under 30 words. Write your own text fields as plain, complete sentences without em dashes.\n- Write dates as YYYY-MM-DD.\n- Never leave a section empty. When nothing applies, return one item with its first text field set to \"none_found\".",
+ "sources": {
+  "allow": [],
+  "block": [],
+  "prioritize": "Google Maps business listings, apps.apple.com and play.google.com app pages, trustpilot.com, yelp.com, bbb.org, g2.com, glassdoor.com, the brand's newsroom and reputable news outlets.",
+  "avoid": "Content farms, AI-generated review roundups, affiliate 'best of' lists, undated pages and pages about similarly named brands."
+ },
+ "output_schema": {
+  "type": "object",
+  "properties": {
+   "brand": {
+    "type": "array",
+    "description": "The brand profile. Exactly one item. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "name": {
+       "type": "string",
+       "description": "Brand name"
+      },
+      "domain": {
+       "type": "string",
+       "description": "Main website domain"
+      },
+      "industry": {
+       "type": "string",
+       "description": "Industry in a few words"
+      },
+      "market": {
+       "type": "string",
+       "description": "Country or region covered"
+      },
+      "competitors": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "description": "3 to 5 closest competitors"
+      },
+      "channels_checked": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "description": "Review channels you checked, from the ratings channel list"
+      }
+     },
+     "required": [
+      "name",
+      "domain",
+      "industry",
+      "market",
+      "competitors",
+      "channels_checked"
+     ]
+    }
+   },
+   "ratings": {
+    "type": "array",
+    "description": "Overall rating per review channel, at least 3 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "channel": {
+       "type": "string",
+       "description": "Review channel",
+       "enum": [
+        "google_maps",
+        "app_store",
+        "google_play",
+        "trustpilot",
+        "yelp",
+        "bbb",
+        "g2",
+        "glassdoor",
+        "other"
+       ]
+      },
+      "profile": {
+       "type": "string",
+       "description": "Profile or app name rated, e.g. \"T-Mobile app\""
+      },
+      "rating": {
+       "type": [
+        "number",
+        "null"
+       ],
+       "description": "Average rating as shown"
+      },
+      "scale": {
+       "type": [
+        "number",
+        "null"
+       ],
+       "description": "Top of the rating scale, usually 5"
+      },
+      "review_count": {
+       "type": [
+        "integer",
+        "null"
+       ],
+       "description": "Number of reviews or ratings as shown"
+      },
+      "pct_negative": {
+       "type": [
+        "number",
+        "null"
+       ],
+       "description": "Share of 1 and 2 star reviews in percent, when the page shows a distribution"
+      },
+      "as_of": {
+       "type": "string",
+       "description": "YYYY-MM-DD, or \"unknown\""
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "channel",
+      "profile",
+      "rating",
+      "scale",
+      "review_count",
+      "source_url"
+     ]
+    }
+   },
+   "themes": {
+    "type": "array",
+    "description": "Review themes by sentiment, 6 to 16 items covering both praise and complaints. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "subtheme": {
+       "type": "string",
+       "description": "The specific topic, e.g. \"5G coverage\", \"overdraft fees\""
+      },
+      "theme": {
+       "type": "string",
+       "description": "Fixed theme",
+       "enum": [
+        "price_value",
+        "product_quality",
+        "customer_service",
+        "digital_experience",
+        "reliability",
+        "fees_billing",
+        "speed_wait",
+        "staff_location",
+        "trust_security",
+        "other"
+       ]
+      },
+      "sentiment": {
+       "type": "string",
+       "description": "Sentiment",
+       "enum": [
+        "positive",
+        "negative",
+        "mixed"
+       ]
+      },
+      "mention_count": {
+       "type": [
+        "integer",
+        "null"
+       ],
+       "description": "Number of reviews mentioning it, when shown"
+      },
+      "mention_share_pct": {
+       "type": [
+        "number",
+        "null"
+       ],
+       "description": "Share of reviews mentioning it in percent, when shown or countable"
+      },
+      "quote": {
+       "type": "string",
+       "description": "One verbatim reviewer quote, under 30 words"
+      },
+      "channel": {
+       "type": "string",
+       "description": "Review channel",
+       "enum": [
+        "google_maps",
+        "app_store",
+        "google_play",
+        "trustpilot",
+        "yelp",
+        "bbb",
+        "g2",
+        "glassdoor",
+        "other"
+       ]
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "subtheme",
+      "theme",
+      "sentiment",
+      "quote",
+      "channel",
+      "source_url"
+     ]
+    }
+   },
+   "locations": {
+    "type": "array",
+    "description": "Physical locations across the largest metros, up to 15 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "place_name": {
+       "type": "string",
+       "description": "Location name as listed"
+      },
+      "city": {
+       "type": "string",
+       "description": "City"
+      },
+      "region": {
+       "type": "string",
+       "description": "State or region"
+      },
+      "rating": {
+       "type": [
+        "number",
+        "null"
+       ],
+       "description": "Google Maps rating"
+      },
+      "review_count": {
+       "type": [
+        "integer",
+        "null"
+       ],
+       "description": "Google Maps review count"
+      },
+      "top_complaint_theme": {
+       "type": "string",
+       "description": "Most common complaint theme in its reviews",
+       "enum": [
+        "price_value",
+        "product_quality",
+        "customer_service",
+        "digital_experience",
+        "reliability",
+        "fees_billing",
+        "speed_wait",
+        "staff_location",
+        "trust_security",
+        "other",
+        "unknown"
+       ]
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "place_name",
+      "city",
+      "region",
+      "rating",
+      "review_count",
+      "source_url"
+     ]
+    }
+   },
+   "summaries": {
+    "type": "array",
+    "description": "AI review summaries shown by platforms, 1 to 5 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "ai_summary": {
+       "type": "string",
+       "description": "The summary text as shown"
+      },
+      "channel": {
+       "type": "string",
+       "description": "Platform that shows it",
+       "enum": [
+        "google_maps",
+        "app_store",
+        "google_play",
+        "trustpilot",
+        "yelp",
+        "bbb",
+        "g2",
+        "glassdoor",
+        "other"
+       ]
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "ai_summary",
+      "channel",
+      "source_url"
+     ]
+    }
+   },
+   "moves": {
+    "type": "array",
+    "description": "The brand's own market moves in the last 12 months, 3 to 10 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "headline": {
+       "type": "string",
+       "description": "What happened, in your own words"
+      },
+      "type": {
+       "type": "string",
+       "description": "Move type",
+       "enum": [
+        "pricing",
+        "launch",
+        "campaign",
+        "partnership",
+        "m_and_a",
+        "expansion",
+        "other"
+       ]
+      },
+      "date": {
+       "type": "string",
+       "description": "YYYY-MM-DD, or \"unknown\""
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "headline",
+      "type",
+      "date",
+      "source_url"
+     ]
+    }
+   },
+   "risks": {
+    "type": "array",
+    "description": "Risk events in the last 12 months, 1 to 8 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "detail": {
+       "type": "string",
+       "description": "One or two sentences"
+      },
+      "type": {
+       "type": "string",
+       "description": "Risk type",
+       "enum": [
+        "outage",
+        "regulatory",
+        "litigation",
+        "pr_crisis",
+        "layoffs",
+        "data_breach",
+        "other"
+       ]
+      },
+      "severity": {
+       "type": "string",
+       "description": "Severity",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ]
+      },
+      "date": {
+       "type": "string",
+       "description": "YYYY-MM-DD, or \"unknown\""
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "detail",
+      "type",
+      "severity",
+      "date",
+      "source_url"
+     ]
+    }
+   }
+  },
+  "required": [
+   "brand",
+   "ratings",
+   "themes",
+   "locations",
+   "summaries",
+   "moves",
+   "risks"
+  ]
+ },
+ "suggested_questions": [
+  "T-Mobile (t-mobile.com), market: United States",
+  "Chase (chase.com), market: United States",
+  "Monzo (monzo.com), market: United Kingdom"
+ ]
+}

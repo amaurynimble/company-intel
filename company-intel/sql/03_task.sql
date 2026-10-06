@@ -1,0 +1,14 @@
+-- 03_task.sql: advances every open company every 2 minutes. It only does work while a company is in progress.
+CREATE OR REPLACE TASK NIMBLE_INTEL.CORE.POLL_TASK
+  WAREHOUSE = NIMBLE_INTEL_WH
+  SCHEDULE = '2 MINUTE'
+  USER_TASK_TIMEOUT_MS = 3300000
+  ALLOW_OVERLAPPING_EXECUTION = FALSE
+  COMMENT = 'Polls Nimble runs and advances each company in NIMBLE_INTEL.CORE.COMPANIES'
+AS
+  EXECUTE IMMEDIATE 'BEGIN
+    IF ((SELECT COUNT(*) FROM NIMBLE_INTEL.CORE.COMPANIES WHERE status IN (''brief'', ''collecting'')) > 0) THEN
+      CALL NIMBLE_INTEL.CORE.POLL();
+    END IF;
+  END;';
+ALTER TASK NIMBLE_INTEL.CORE.POLL_TASK RESUME;

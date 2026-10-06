@@ -1,0 +1,467 @@
+{
+ "agent_name": "snowflake_account_brief",
+ "display_name": "Snowflake account brief",
+ "description": "Researches one company (optionally one business unit) for a Snowflake seller: profile, units, data and AI leaders, data stack vendors, strategy, trigger news, rivals, risks and Snowflake angles, each item cited.",
+ "use_case": "research",
+ "effort": "high",
+ "skill": "# Role\nYou research one company for a Snowflake account executive who is preparing outreach or a first meeting. Return facts a seller can act on, each with the page that proves it.\n\n# Input\nA company name and domain, sometimes followed by \" — <business unit>\". When a unit is given, focus every section on that unit.\n\n# What to find\n- company: legal name, industry, headquarters, latest revenue, headcount and ticker.\n- units: the main business units or divisions and who leads each one.\n- leaders: the CEO and the executives who buy data and AI: CDO, CIO, CTO, CMO, CDAO and heads of data, analytics, AI and digital.\n- stack: the cloud, warehouse, lakehouse, BI, AI/ML, CDP and ETL vendors in use. Look at job postings, vendor customer stories (snowflake.com, databricks.com, AWS, Google Cloud, Microsoft), engineering blogs and conference talks.\n- strategy: initiatives stated in earnings calls, annual reports and investor days, and how each depends on data or AI.\n- news: trigger events from the last 12 months, such as earnings, executive changes, M&A, layoffs, partnerships, launches and regulatory actions.\n- rivals: 3 to 6 direct competitors.\n- risks: litigation, regulatory, outage, security or financial pressure.\n- angles: 3 to 5 openings for Snowflake, each tied to an item found above.\n\n# Rules\n- Every item cites a direct page, never a search results page.\n- Write dates as YYYY-MM-DD.\n- Set unit to \"corporate\" for company-wide items.\n- Write text fields as plain, complete sentences without em dashes.\n- Never leave a section empty. When nothing is found, return one item with its first text field set to \"none_found\".",
+ "sources": {
+  "allow": [],
+  "block": [],
+  "prioritize": "The company's own site, investor relations, annual reports and earnings call transcripts; its job postings; vendor customer stories on snowflake.com, databricks.com, aws.amazon.com, cloud.google.com and microsoft.com; its engineering blog; reputable business press; LinkedIn for people.",
+  "avoid": "Content farms, AI-generated company summaries, undated pages, data-broker profile pages and pages about similarly named companies."
+ },
+ "output_schema": {
+  "type": "object",
+  "properties": {
+   "company": {
+    "type": "array",
+    "description": "The company profile. Exactly one item. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "name": {
+       "type": "string",
+       "description": "Legal or trading name"
+      },
+      "domain": {
+       "type": "string",
+       "description": "Main website domain"
+      },
+      "industry": {
+       "type": "string",
+       "description": "Industry in a few words"
+      },
+      "hq": {
+       "type": "string",
+       "description": "Headquarters city and country"
+      },
+      "revenue_usd": {
+       "type": [
+        "number",
+        "null"
+       ],
+       "description": "Latest annual revenue in USD"
+      },
+      "revenue_period": {
+       "type": "string",
+       "description": "Fiscal year or period of revenue_usd, e.g. \"FY2025\""
+      },
+      "employees": {
+       "type": [
+        "integer",
+        "null"
+       ],
+       "description": "Latest headcount"
+      },
+      "ticker": {
+       "type": "string",
+       "description": "Exchange:ticker, or \"private\""
+      },
+      "description": {
+       "type": "string",
+       "description": "Two sentences on what the company does and for whom"
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "name",
+      "domain",
+      "industry",
+      "hq",
+      "description",
+      "source_url"
+     ]
+    }
+   },
+   "units": {
+    "type": "array",
+    "description": "Main business units or divisions, 2 to 8 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "name": {
+       "type": "string",
+       "description": "Business unit name as the company writes it"
+      },
+      "description": {
+       "type": "string",
+       "description": "One sentence on what the unit does"
+      },
+      "head": {
+       "type": "string",
+       "description": "\"Name, Title\" of the unit leader, or \"unknown\""
+      },
+      "employees": {
+       "type": [
+        "integer",
+        "null"
+       ],
+       "description": "Headcount of the unit when disclosed"
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "name",
+      "description",
+      "head",
+      "source_url"
+     ]
+    }
+   },
+   "leaders": {
+    "type": "array",
+    "description": "CEO plus data, AI, technology, marketing and digital executives in role today, 4 to 15 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "name": {
+       "type": "string",
+       "description": "Full name"
+      },
+      "title": {
+       "type": "string",
+       "description": "Current title"
+      },
+      "function": {
+       "type": "string",
+       "description": "Function",
+       "enum": [
+        "exec",
+        "data",
+        "it",
+        "marketing",
+        "digital",
+        "finance",
+        "other"
+       ]
+      },
+      "unit": {
+       "type": "string",
+       "description": "Business unit this item belongs to, or \"corporate\" when company-wide"
+      },
+      "since": {
+       "type": "string",
+       "description": "YYYY-MM-DD, or \"unknown\""
+      },
+      "linkedin_url": {
+       "type": "string",
+       "description": "LinkedIn profile URL, or \"unknown\""
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "name",
+      "title",
+      "function",
+      "unit",
+      "source_url"
+     ]
+    }
+   },
+   "stack": {
+    "type": "array",
+    "description": "Data, cloud and AI vendors the company uses or is moving to or from, at least 4 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "vendor": {
+       "type": "string",
+       "description": "Vendor or product, e.g. \"Databricks\", \"Google BigQuery\""
+      },
+      "layer": {
+       "type": "string",
+       "description": "Stack layer",
+       "enum": [
+        "cloud",
+        "warehouse",
+        "lakehouse",
+        "bi",
+        "ml_ai",
+        "cdp_martech",
+        "etl",
+        "other"
+       ]
+      },
+      "status": {
+       "type": "string",
+       "description": "Usage status",
+       "enum": [
+        "in_use",
+        "evaluating",
+        "migrating_from",
+        "migrating_to"
+       ]
+      },
+      "unit": {
+       "type": "string",
+       "description": "Business unit this item belongs to, or \"corporate\" when company-wide"
+      },
+      "evidence_type": {
+       "type": "string",
+       "description": "Type of evidence",
+       "enum": [
+        "job_posting",
+        "case_study",
+        "vendor_site",
+        "earnings_call",
+        "press",
+        "blog",
+        "conference_talk",
+        "other"
+       ]
+      },
+      "evidence": {
+       "type": "string",
+       "description": "One sentence quoting or paraphrasing what the page says"
+      },
+      "date": {
+       "type": "string",
+       "description": "YYYY-MM-DD, or \"unknown\""
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "vendor",
+      "layer",
+      "status",
+      "unit",
+      "evidence_type",
+      "evidence",
+      "source_url"
+     ]
+    }
+   },
+   "strategy": {
+    "type": "array",
+    "description": "Stated strategic initiatives, 3 to 8 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "initiative": {
+       "type": "string",
+       "description": "Initiative name"
+      },
+      "summary": {
+       "type": "string",
+       "description": "One or two sentences on the goal"
+      },
+      "data_ai_link": {
+       "type": "string",
+       "description": "How the initiative depends on data or AI, or \"none stated\""
+      },
+      "unit": {
+       "type": "string",
+       "description": "Business unit this item belongs to, or \"corporate\" when company-wide"
+      },
+      "date": {
+       "type": "string",
+       "description": "YYYY-MM-DD, or \"unknown\""
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "initiative",
+      "summary",
+      "data_ai_link",
+      "unit",
+      "source_url"
+     ]
+    }
+   },
+   "news": {
+    "type": "array",
+    "description": "Trigger events from the last 12 months, 5 to 12 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "headline": {
+       "type": "string",
+       "description": "Headline in your own words"
+      },
+      "type": {
+       "type": "string",
+       "description": "Event type",
+       "enum": [
+        "earnings",
+        "exec_change",
+        "m_and_a",
+        "layoffs",
+        "partnership",
+        "launch",
+        "regulatory",
+        "other"
+       ]
+      },
+      "summary": {
+       "type": "string",
+       "description": "One or two sentences"
+      },
+      "unit": {
+       "type": "string",
+       "description": "Business unit this item belongs to, or \"corporate\" when company-wide"
+      },
+      "date": {
+       "type": "string",
+       "description": "YYYY-MM-DD, or \"unknown\""
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "headline",
+      "type",
+      "summary",
+      "unit",
+      "date",
+      "source_url"
+     ]
+    }
+   },
+   "rivals": {
+    "type": "array",
+    "description": "Direct competitors, 3 to 6 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "name": {
+       "type": "string",
+       "description": "Competitor name"
+      },
+      "domain": {
+       "type": "string",
+       "description": "Competitor website domain"
+      },
+      "overlap": {
+       "type": "string",
+       "description": "Where they compete, in a few words"
+      }
+     },
+     "required": [
+      "name",
+      "domain",
+      "overlap"
+     ]
+    }
+   },
+   "risks": {
+    "type": "array",
+    "description": "Current risks, 1 to 6 items. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "detail": {
+       "type": "string",
+       "description": "One or two sentences"
+      },
+      "type": {
+       "type": "string",
+       "description": "Risk type",
+       "enum": [
+        "litigation",
+        "regulatory",
+        "outage",
+        "security",
+        "financial",
+        "reputation",
+        "other"
+       ]
+      },
+      "severity": {
+       "type": "string",
+       "description": "Severity",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ]
+      },
+      "date": {
+       "type": "string",
+       "description": "YYYY-MM-DD, or \"unknown\""
+      },
+      "source_url": {
+       "type": "string",
+       "description": "Direct URL of the page that shows this item"
+      }
+     },
+     "required": [
+      "detail",
+      "type",
+      "severity",
+      "source_url"
+     ]
+    }
+   },
+   "angles": {
+    "type": "array",
+    "description": "Openings for Snowflake, 3 to 5 items, each tied to an item above. Always return at least one item. If nothing is found, return one item with its first text field set to \"none_found\".",
+    "items": {
+     "type": "object",
+     "properties": {
+      "angle": {
+       "type": "string",
+       "description": "The opening in one sentence"
+      },
+      "product": {
+       "type": "string",
+       "description": "Snowflake product or motion, e.g. \"Cortex AI\", \"Marketplace\", \"migration from Teradata\""
+      },
+      "based_on": {
+       "type": "string",
+       "description": "The section and item it comes from, e.g. \"stack: Teradata migrating_from\""
+      },
+      "unit": {
+       "type": "string",
+       "description": "Business unit this item belongs to, or \"corporate\" when company-wide"
+      },
+      "talking_point": {
+       "type": "string",
+       "description": "One sentence a seller could say"
+      }
+     },
+     "required": [
+      "angle",
+      "product",
+      "based_on",
+      "unit",
+      "talking_point"
+     ]
+    }
+   }
+  },
+  "required": [
+   "company",
+   "units",
+   "leaders",
+   "stack",
+   "strategy",
+   "news",
+   "rivals",
+   "risks",
+   "angles"
+  ]
+ },
+ "suggested_questions": [
+  "T-Mobile US (t-mobile.com)",
+  "JPMorgan Chase (jpmorganchase.com) — Consumer & Community Banking",
+  "Nestlé (nestle.com)"
+ ]
+}

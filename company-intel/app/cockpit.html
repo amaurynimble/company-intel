@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Company intelligence</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
+<style>
+/* Layout: a deep hero band with the brand set, a sticky section nav, then one full-width section at a time.
+   Light-first for Snowsight; every colour is a token with a dark redefinition. */
+:root {
+  --bg: #F4F4F8; --surface: #FFFFFF; --surface-2: #F7F7FB; --line: #E5E7EB; --grid: #EEEFF3;
+  --ink: #0B0B0B; --fg: #2A2F3A; --muted: #5F6574; --faint: #9AA0AD;
+  --hero: #121827; --hero-fg: #FFFFFF; --hero-muted: #A9B0C2;
+  --accent: #6665EC; --accent-ink: #4B4ACF; --accent-tint: #EEEFFF; --yellow: #FBEE23;
+  --b0: #6665EC; --b1: #EB6834; --b2: #1BAF7A; --b3: #EDA100;
+  --good: #1F8A4C; --good-bg: #E3F6E8; --warn: #9A6B00; --warn-bg: #FFF4D1; --bad: #C0392B; --bad-bg: #FDE7E4;
+  --shadow: 0 24px 48px rgba(140,140,184,0.12);
+  --f-display: "Roobert", "Plus Jakarta Sans", "DM Sans", system-ui, sans-serif;
+  --f-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "DM Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1320; --surface: #151B2B; --surface-2: #1B2235; --line: #2A3247; --grid: #222A3D;
+  --ink: #F4F5F8; --fg: #D9DCE4; --muted: #A3A9B8; --faint: #6F7689;
+  --hero: #0A0F1A; --accent: #8F8EF5; --accent-ink: #B9B8FF; --accent-tint: #23264A;
+  --b0: #7F7EF2; --b1: #D95926; --b2: #199E70; --b3: #C98500;
+  --good: #6FD08E; --good-bg: #173325; --warn: #E7BE55; --warn-bg: #3A2F10; --bad: #F08A7E; --bad-bg: #3D1C1A;
+  --shadow: 0 24px 48px rgba(0,0,0,0.35); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E1320; --surface: #151B2B; --surface-2: #1B2235; --line: #2A3247; --grid: #222A3D;
+  --ink: #F4F5F8; --fg: #D9DCE4; --muted: #A3A9B8; --faint: #6F7689;
+  --hero: #0A0F1A; --accent: #8F8EF5; --accent-ink: #B9B8FF; --accent-tint: #23264A;
+  --b0: #7F7EF2; --b1: #D95926; --b2: #199E70; --b3: #C98500;
+  --good: #6FD08E; --good-bg: #173325; --warn: #E7BE55; --warn-bg: #3A2F10; --bad: #F08A7E; --bad-bg: #3D1C1A;
+  --shadow: 0 24px 48px rgba(0,0,0,0.35); color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 14.5px/1.5 var(--f-body); }
+a { color: var(--accent-ink); text-underline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-display); color: var(--ink); margin: 0; letter-spacing: -0.015em; text-wrap: balance; }
+h2 { font-size: clamp(20px, 2.2vw, 26px); line-height: 1.2; font-weight: 800; }
+h3 { font-size: 15.5px; font-weight: 700; line-height: 1.3; }
+p { margin: 0; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); } .small { font-size: 12.5px; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 24px; }
+
+/* hero */
+.hero { background: var(--hero); color: var(--hero-fg); padding-block: 28px 22px; }
+.hero .eyebrow { font: 500 11.5px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--hero-muted); }
+.hero h1 { color: var(--hero-fg); font-size: clamp(30px, 4vw, 46px); font-weight: 800; line-height: 1.05; margin-top: 10px; }
+.hero .sub { color: var(--hero-muted); margin-top: 8px; max-width: 80ch; }
+.brandset { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+.bchip { display: inline-flex; align-items: center; gap: 8px; border-radius: 100px; padding: 6px 12px 6px 8px; font-weight: 600; font-size: 13px; background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.14); }
+.bchip i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.bchip.focal { background: #fff; color: #0B0B0B; }
+.vs { color: var(--hero-muted); font-size: 13px; margin-inline: 2px; }
+.status { margin-left: auto; font: 500 12px var(--f-mono); color: var(--hero-muted); }
+.status b { color: #81E58A; font-weight: 500; }
+
+/* nav */
+nav.tabs { position: sticky; top: 0; z-index: 10; background: color-mix(in oklab, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+nav.tabs .wrap { display: flex; gap: 4px; overflow-x: auto; padding-block: 10px; }
+nav.tabs button { font: 600 13.5px var(--f-body); color: var(--muted); background: transparent; border: 0; border-radius: 100px; padding: 9px 16px; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { background: var(--ink); color: var(--surface); }
+nav.tabs button:hover:not([aria-selected="true"]) { background: var(--surface); color: var(--ink); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+main { padding-block: 22px 48px; }
+section.view { display: grid; gap: 18px; }
+.head { display: grid; gap: 6px; }
+.grid { display: grid; gap: 18px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.grid > * { min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 20px; display: grid; gap: 14px; align-content: start; box-shadow: var(--shadow); min-width: 0; }
+.card .ch { display: grid; gap: 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.scroll { overflow-x: auto; }
+
+/* KPI tiles */
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; display: grid; gap: 8px; box-shadow: var(--shadow); }
+.kpi .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.kpi .n { font-size: 13px; color: var(--muted); font-weight: 500; }
+.rank { font: 600 11.5px var(--f-mono); padding: 4px 8px; border-radius: 100px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.rank.r1 { background: var(--good-bg); color: var(--good); border-color: transparent; }
+.rank.rl { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
+.kpi .v { font: 800 34px/1 var(--f-display); color: var(--ink); font-variant-numeric: tabular-nums; }
+.kpi .v small { font: 500 14px var(--f-body); color: var(--muted); margin-left: 3px; }
+.mini { display: grid; gap: 5px; }
+.mini .row { display: grid; grid-template-columns: 92px 1fr 46px; gap: 8px; align-items: center; font-size: 12px; }
+.mini .row .nm { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini .row.f .nm { color: var(--ink); font-weight: 600; }
+.bar { height: 8px; border-radius: 4px; background: var(--grid); position: relative; overflow: hidden; }
+.bar b { position: absolute; inset: 0 auto 0 0; border-radius: 4px; }
+.mini .row .val { text-align: right; font-family: var(--f-mono); font-size: 11.5px; color: var(--fg); }
+
+/* scorecard */
+table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13.5px; }
+th { text-align: left; font: 500 11px/1.25 var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+.sc td.metric { min-width: 120px; }
+.sc .cell { display: grid; gap: 5px; }
+.sc .cell .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
+.sc .cell.best .num { color: var(--good); font-weight: 600; }
+.brandcell { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex: none; }
+tr.focal td { background: color-mix(in oklab, var(--accent-tint) 55%, transparent); }
+
+/* insights */
+.ins { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.icard { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; position: relative; overflow: hidden; }
+.icard::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--accent); }
+.icard[data-tag="risk"]::before { background: var(--bad); } .icard[data-tag="opportunity"]::before { background: var(--good); }
+.icard[data-tag="competitor"]::before { background: var(--b3); }
+.tag { display: inline-flex; align-items: center; gap: 6px; font: 600 11px var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.icard .h { font-weight: 600; color: var(--ink); line-height: 1.4; font-size: 14.5px; }
+.icard q { color: var(--muted); font-size: 13px; quotes: "“" "”"; }
+
+/* AI */
+.engines { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.eng { display: grid; gap: 10px; }
+.eng .hd { display: flex; justify-content: space-between; align-items: baseline; }
+.eng .hd b { font: 700 15px var(--f-display); color: var(--ink); }
+.hb { display: grid; grid-template-columns: 110px 1fr 44px; gap: 8px; align-items: center; font-size: 13px; }
+.hb .bar { height: 14px; border-radius: 7px; }
+.hb .bar b { border-radius: 7px; }
+.hb .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hb .val { font-family: var(--f-mono); text-align: right; font-size: 12.5px; }
+.stack100 { display: flex; height: 26px; border-radius: 8px; overflow: hidden; gap: 2px; background: var(--grid); }
+.stack100 span { display: flex; align-items: center; justify-content: center; color: #fff; font: 600 11px var(--f-mono); min-width: 0; overflow: hidden; }
+.prompts { display: grid; gap: 0; }
+.prow { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, 150px); gap: 10px; padding-block: 10px; border-bottom: 1px solid var(--line); align-items: center; }
+.prow:last-child { border-bottom: 0; }
+.prow.hdr { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding-block: 4px 8px; }
+.prow .q { font-size: 13.5px; color: var(--fg); }
+.named { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.named .pill { display: inline-flex; align-items: center; justify-content: center; height: 22px; min-width: 22px; padding-inline: 7px; border-radius: 100px; color: #fff; font: 600 10.5px var(--f-mono); }
+.named .none { color: var(--faint); font-size: 12px; }
+.filter { display: flex; flex-wrap: wrap; gap: 6px; }
+.filter button { font: 500 12.5px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 100px; padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.filter button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+
+/* search */
+.kwm td.cellp { text-align: center; font: 600 12px var(--f-mono); border-radius: 8px; border: 2px solid var(--surface); min-width: 64px; }
+.kwm td.kw { font-size: 13px; white-space: nowrap; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+.flag { display: inline-flex; font: 500 10.5px var(--f-mono); padding: 3px 6px; border-radius: 6px; background: var(--accent-tint); color: var(--accent-ink); margin-left: 6px; }
+.flag.ad { background: var(--warn-bg); color: var(--warn); }
+.donutwrap { display: grid; grid-template-columns: 180px 1fr; gap: 18px; align-items: center; }
+.big { font: 800 44px/1 var(--f-display); color: var(--ink); }
+
+/* voice */
+.feed { display: grid; gap: 0; }
+.fi { display: grid; grid-template-columns: 86px 1fr; gap: 12px; padding-block: 10px; border-bottom: 1px solid var(--line); }
+.fi:last-child { border-bottom: 0; }
+.fi .d { font: 400 12px/1.5 var(--f-mono); color: var(--muted); }
+.fi .t { min-width: 0; font-size: 13.5px; }
+.bpill { display: inline-flex; align-items: center; gap: 5px; font: 600 11px var(--f-body); padding: 2px 8px 2px 6px; border-radius: 100px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink); margin-right: 6px; vertical-align: 1px; }
+.bpill i { width: 8px; height: 8px; border-radius: 50%; }
+.sent { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.sent.positive { background: var(--good); } .sent.negative { background: var(--bad); } .sent.mixed, .sent.neutral { background: var(--faint); }
+.sev { font: 600 10.5px var(--f-mono); text-transform: uppercase; padding: 2px 6px; border-radius: 6px; margin-right: 6px; }
+.sev.high { background: var(--bad-bg); color: var(--bad); } .sev.medium { background: var(--warn-bg); color: var(--warn); } .sev.low { background: var(--surface-2); color: var(--muted); }
+
+/* diverging */
+.div { display: grid; gap: 6px; }
+.drow { display: grid; grid-template-columns: 150px 1fr 54px; gap: 10px; align-items: center; min-height: 30px; font-size: 13px; }
+.track { position: relative; height: 24px; }
+.track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--grid); }
+.track .zero { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid var(--faint); }
+.track .dt { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid var(--surface); }
+.track .ln { position: absolute; top: 50%; height: 2px; background: var(--faint); transform: translateY(-1px); opacity: .7; }
+.axis { display: grid; grid-template-columns: 150px 1fr 54px; gap: 10px; font: 400 10.5px var(--f-mono); color: var(--faint); }
+.axis .ticks { display: flex; justify-content: space-between; }
+
+.heat td.hc { text-align: center; font: 600 12.5px var(--f-mono); border-radius: 8px; border: 2px solid var(--surface); min-width: 50px; padding: 8px 4px; }
+.metros { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.metro { border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: grid; gap: 6px; background: var(--surface); }
+.metro .mn { font-weight: 600; color: var(--ink); font-size: 13px; }
+.metro .mv { font: 800 24px/1 var(--f-display); color: var(--ink); }
+.quotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.qt { border-radius: 16px; padding: 14px 16px; background: var(--surface-2); border: 1px solid var(--line); display: grid; gap: 8px; font-size: 13.5px; }
+.qt.neg { border-left: 4px solid var(--bad); } .qt.pos { border-left: 4px solid var(--good); }
+
+/* account */
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 14px; }
+.fact span { display: block; font: 500 10.5px var(--f-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.fact b { font: 700 18px var(--f-display); color: var(--ink); }
+.vend { display: grid; grid-template-columns: 170px 1fr; gap: 14px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.vend:last-child { border-bottom: 0; }
+.vend .vn { font: 700 15px var(--f-display); color: var(--ink); display: grid; gap: 6px; align-content: start; }
+.vend.hl .vn { color: var(--accent-ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { display: inline-flex; align-items: center; font: 500 11.5px var(--f-mono); padding: 4px 8px; border-radius: 100px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip.good { background: var(--good-bg); color: var(--good); border-color: transparent; }
+.chip.warn { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.chip.bad { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
+.people { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 10px; }
+.person { border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 4px; background: var(--surface); }
+.person .pn { font-weight: 700; color: var(--ink); }
+.angle { border-radius: 16px; padding: 14px 16px; background: var(--accent-tint); display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.angle .chip, .vend .chip { white-space: normal; text-overflow: clip; }
+.card > *, .vend > * { min-width: 0; }
+.angle b { color: var(--ink); }
+.srcgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 8px 28px; }
+.srcg { min-width: 0; }
+.srch { font: 600 11.5px var(--f-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--ink); padding-block: 10px 6px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+.srcl { list-style: none; margin: 0; padding: 0; }
+.src { display: grid; grid-template-columns: 28px 1fr; gap: 8px; padding-block: 8px; border-bottom: 1px solid var(--grid); font-size: 13px; }
+.src:last-child { border-bottom: 0; }
+.src .sn { color: var(--faint); font-size: 11px; padding-top: 2px; }
+.src .sb { min-width: 0; display: grid; gap: 4px; }
+.src .sb a { color: var(--accent-ink); text-decoration: none; overflow-wrap: anywhere; font-size: 12.5px; }
+.src .sup { color: var(--fg); font-size: 13px; }
+.src .sb a:hover { color: var(--accent-ink); text-decoration: underline; }
+.src .sm { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 11.5px; color: var(--muted); }
+.src .dom { color: var(--accent-ink); font-weight: 600; }
+.empty { color: var(--muted); font-size: 13.5px; padding: 8px 0; }
+#tip { position: fixed; z-index: 50; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12.5px; padding: 8px 10px; border-radius: 10px; max-width: 280px; opacity: 0; transition: opacity .1s; }
+@media (prefers-reduced-motion: reduce) { #tip { transition: none; } }
+@media (max-width: 720px) {
+  .prow { grid-template-columns: 1fr; } .prow.hdr { display: none; }
+  .donutwrap { grid-template-columns: 1fr; } .vend { grid-template-columns: 1fr; }
+  .drow, .axis { grid-template-columns: 96px 1fr 44px; } .hb { grid-template-columns: 80px 1fr 40px; }
+}
+</style></head>
+<body>
+<header class="hero"><div class="wrap" id="hero"></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" id="tabs" role="tablist"></div></nav>
+<main><div class="wrap" id="main"></div></main>
+<div id="tip" role="tooltip"></div>
+<script>
+const D = /*DATA*/null;
+const TABS = [["account", "Account brief"], ["overview", "Overview"], ["ai", "AI visibility"], ["search", "Search and ads"], ["voice", "Share of voice"], ["cx", "Customer voice"]];
+const ENG = {chatgpt: "ChatGPT", gemini: "Gemini", google_ai_overview: "Google AI Overviews"};
+const THEME = {price_value: "Price and value", product_quality: "Product quality", customer_service: "Customer service", digital_experience: "App and website",
+  reliability: "Reliability", fees_billing: "Fees and billing", speed_wait: "Wait times", staff_location: "Stores and branches", trust_security: "Trust and security"};
+const CH = {app_store: "App Store", google_play: "Google Play", trustpilot: "Trustpilot", yelp: "Yelp", bbb: "BBB", g2: "G2", other: "Other sites"};
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const fmt = (v, d = 0) => v == null || isNaN(v) ? "–" : Number(v).toLocaleString("en-US", {maximumFractionDigits: d, minimumFractionDigits: d});
+const host = u => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
+const link = (u, label) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(label || host(u) || "source")}</a>` : "";
+const avg = a => { const x = a.filter(v => v != null && !isNaN(v)); return x.length ? x.reduce((s, v) => s + v, 0) / x.length : null; };
+const list = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1];
+
+if (!D || !D.company) { document.getElementById("main").innerHTML = '<p class="empty">No data for this company yet.</p>'; throw new Error("no data"); }
+const B = D.brands, FOC = B.find(b => b.is_focal) || B[0], RIV = B.filter(b => !b.is_focal);
+const COL = {}; B.forEach((b, i) => COL[b.brand_id] = `var(--b${i % 4})`);
+const NAME = {}; B.forEach(b => NAME[b.brand_id] = b.brand);
+const M = (bid, key) => (D.metrics[bid] || {})[key] ?? null;
+const ready = D.company.status === "ready";
+const tip = document.getElementById("tip");
+
+function rankOf(key, bid, higher = true) {
+  const vals = B.map(b => [b.brand_id, M(b.brand_id, key)]).filter(x => x[1] != null);
+  if (!vals.length || M(bid, key) == null) return null;
+  vals.sort((a, b) => higher ? b[1] - a[1] : a[1] - b[1]);
+  return {r: vals.findIndex(x => x[0] === bid) + 1, n: vals.length};
+}
+const rankChip = (rk) => rk ? `<span class="rank ${rk.r === 1 ? "r1" : rk.r === rk.n ? "rl" : ""}">#${rk.r} of ${rk.n}</span>` : "";
+const bchip = bid => `<span class="bpill"><i style="background:${COL[bid]}"></i>${esc(NAME[bid] || bid)}</span>`;
+
+function hero() {
+  const c = D.company, a = D.account.company || {};
+  document.getElementById("hero").innerHTML = `
+    <div class="eyebrow">Company intelligence · ${esc(c.market || "US")} market · ${esc(String(a.industry || c.industry || "").split(/[;,(]/)[0].trim())}</div>
+    <h1>${esc(c.company)}</h1>
+    <p class="sub">Nimble Web Search Agents researched ${esc(c.company)} and three rivals across AI assistants, Google, news, Reddit, review sites and Google Maps. Every number links back to the pages it came from.</p>
+    <div class="brandset">${B.map((b, i) => `${i === 1 ? '<span class="vs">compared with</span>' : ""}<span class="bchip ${b.is_focal ? "focal" : ""}"><i style="background:${COL[b.brand_id]}"></i>${esc(b.brand)}</span>`).join("")}
+      <span class="status">${ready ? `<b>●</b> Research complete ${esc((c.ready_at || "").slice(0, 10))}` : `Research in progress: ${esc(c.status)}`}</span></div>`;
+}
+
+function minis(key, digits, unit, higher = true) {
+  const vals = B.map(b => M(b.brand_id, key)), max = Math.max(...vals.filter(v => v != null), 1);
+  return `<div class="mini">${B.map(b => { const v = M(b.brand_id, key); return `<div class="row ${b.is_focal ? "f" : ""}"><span class="nm">${esc(b.brand)}</span>
+    <div class="bar"><b style="width:${!v ? 0 : Math.max(2, v / max * 100)}%;background:${COL[b.brand_id]}"></b></div><span class="val">${fmt(v, digits)}${v == null ? "" : unit}</span></div>`; }).join("")}</div>`;
+}
+function kpi(name, key, digits, unit, higher = true) {
+  const v = M(FOC.brand_id, key), mu = unit.trim().startsWith("/") ? "" : unit;
+  return `<div class="kpi"><div class="top"><span class="n">${name}</span>${rankChip(rankOf(key, FOC.brand_id, higher))}</div>
+    <div class="v">${fmt(v, digits)}<small>${v == null ? "" : unit}</small></div>${minis(key, digits, mu, higher)}</div>`;
+}
+function aiAvg(bid) { return avg(Object.keys(ENG).map(e => M(bid, "share_of_ai_answer_pct|" + e))); }
+B.forEach(b => { (D.metrics[b.brand_id] = D.metrics[b.brand_id] || {})["ai_avg"] = aiAvg(b.brand_id); });
+(D.voice.sov || []).forEach(r => { (D.metrics[r.brand_id] = D.metrics[r.brand_id] || {})["sov"] = r.share_of_voice_pct; });
+
+function overview() {
+  const cols = [["AI answer share", "ai_avg", 0, "%", true], ["Organic search share", "search_top10_share_pct", 1, "%", true], ["Share of news", "sov", 0, "%", true],
+    ["Reputation", "reputation_score", 2, "", true], ["Review sentiment", "review_net_sentiment_pct", 0, "", true], ["Risk index 90 days", "risk_index_90d", 0, "", false]];
+  const best = {}; cols.forEach(([, k, , , hi]) => { const v = B.map(b => M(b.brand_id, k)).filter(x => x != null); best[k] = v.length ? (hi ? Math.max(...v) : Math.min(...v)) : null; });
+  const maxv = {}; cols.forEach(([, k]) => maxv[k] = Math.max(...B.map(b => Math.abs(M(b.brand_id, k) ?? 0)), 1));
+  const first = rankOf("ai_avg", FOC.brand_id), sr = rankOf("search_top10_share_pct", FOC.brand_id), vr = rankOf("sov", FOC.brand_id);
+  const leads = [first && first.r === 1 ? "AI answers" : null, sr && sr.r === 1 ? "organic search" : null, vr && vr.r === 1 ? "news coverage" : null].filter(Boolean);
+  const headline = leads.length ? `${FOC.brand} leads its rivals on ${list(leads)}` : `${FOC.brand} trails at least one rival on AI answers, search and news`;
+  return `<div class="head"><h2>${esc(headline)}</h2><p class="muted">The scorecard ranks ${esc(FOC.brand)} against ${esc(list(RIV.map(r => r.brand)))} on six signals. Green marks the leader in each column.</p></div>
+  <div class="grid g4">${kpi("Share of AI answers, three assistants", "ai_avg", 0, "%")}${kpi("Share of organic Google results", "search_top10_share_pct", 1, "%")}${kpi("Share of news coverage, 90 days", "sov", 0, "%")}${kpi("Reputation score", "reputation_score", 2, " / 5")}</div>
+  <div class="card"><div class="ch"><h3>Competitive scorecard</h3><p class="small muted">Higher is better in every column except the risk index. Review sentiment runs from −100 to +100.</p></div>
+    <div class="scroll"><table class="sc"><thead><tr><th>Brand</th>${cols.map(c => `<th>${c[0]}</th>`).join("")}</tr></thead><tbody>
+    ${B.map(b => `<tr class="${b.is_focal ? "focal" : ""}"><td><span class="brandcell"><i class="dot" style="background:${COL[b.brand_id]}"></i>${esc(b.brand)}</span></td>${cols.map(([, k, d, u]) => {
+      const v = M(b.brand_id, k); return `<td class="metric"><div class="cell ${v != null && v === best[k] ? "best" : ""}"><span class="num">${fmt(v, d)}${v == null ? "" : u}</span><div class="bar"><b style="width:${v == null ? 0 : Math.max(3, Math.abs(v) / maxv[k] * 100)}%;background:${COL[b.brand_id]}"></b></div></div></td>`; }).join("")}</tr>`).join("")}
+    </tbody></table></div></div>
+  <div class="grid" style="gap:12px"><h3>What the data says</h3><div class="ins">${D.insights.length ? D.insights.map(i => `<article class="icard" data-tag="${esc(i.tag)}">
+    <span class="tag">${esc(i.tag)} · ${esc((i.area || "").replace(/_/g, " "))}</span><div class="h">${esc(i.headline)}</div>
+    ${i.quote ? `<q>${esc(i.quote)}</q>` : ""}${i.source_url ? `<span class="small muted">Source: ${link(i.source_url)}</span>` : ""}</article>`).join("") : '<p class="empty">Insight cards appear when the research finishes.</p>'}</div></div>`;
+}
+
+function hbars(key) {
+  const vals = B.map(b => [b, M(b.brand_id, key)]).sort((a, b) => (b[1] ?? -1) - (a[1] ?? -1));
+  return vals.map(([b, v]) => `<div class="hb"><span class="nm" style="${b.is_focal ? "font-weight:700;color:var(--ink)" : ""}">${esc(b.brand)}</span><div class="bar"><b style="width:${!v ? 0 : Math.max(1.5, v)}%;background:${COL[b.brand_id]}"></b></div><span class="val">${fmt(v)}${v == null ? "" : "%"}</span></div>`).join("");
+}
+let promptFilter = "all";
+function ai() {
+  const engs = Object.keys(ENG).filter(e => B.some(b => M(b.brand_id, "share_of_ai_answer_pct|" + e) != null));
+  if (!engs.length) return `<div class="head"><h2>AI answers are still being collected</h2></div>`;
+  const best = engs.map(e => { const top = [...B].sort((a, b) => (M(b.brand_id, "share_of_ai_answer_pct|" + e) ?? -1) - (M(a.brand_id, "share_of_ai_answer_pct|" + e) ?? -1))[0]; return [e, top]; });
+  const fShare = M(FOC.brand_id, "share_of_ai_answer_pct|chatgpt");
+  const h = fShare != null ? `ChatGPT names ${FOC.brand} in ${fmt(fShare)}% of answers to ${D.ai.prompts.length} category questions` : `AI assistants answered ${D.ai.prompts.length} category questions`;
+  const stack = e => { const firsts = {}; let tot = 0; D.ai.prompts.forEach(p => { const l = (p.engines || {})[e]; if (l && l.length) { firsts[l[0]] = (firsts[l[0]] || 0) + 1; tot++; } });
+    return tot ? `<div class="stack100">${B.filter(b => firsts[b.brand_id]).map(b => `<span style="width:${firsts[b.brand_id] / tot * 100}%;background:${COL[b.brand_id]}" data-tip="${esc(b.brand)} is named first in ${firsts[b.brand_id]} of ${tot} answers">${Math.round(firsts[b.brand_id] / tot * 100)}%</span>`).join("")}</div>` : '<p class="empty">No brand named.</p>'; };
+  const rows = D.ai.prompts.filter(p => promptFilter === "all" || Object.values(p.engines || {}).some(l => promptFilter === "missing" ? !l.includes(FOC.brand_id) : l.includes(promptFilter)));
+  const named = (p, e) => { const l = (p.engines || {})[e]; if (!(p.asked || []).includes(e) && !l) return `<span class="none">${e === "google_ai_overview" ? "no AI Overview shown" : "no answer"}</span>`;
+    return l && l.length ? `<div class="named">${l.map((bid, i) => `<span class="pill" style="background:${COL[bid]}" data-tip="${esc(NAME[bid])}, named ${i + 1}${["st", "nd", "rd"][i] || "th"}">${i + 1}</span>`).join("")}</div>` : '<span class="none">no brand named</span>'; };
+  return `<div class="head"><h2>${esc(h)}</h2><p class="muted">ChatGPT and Gemini answered the same category questions, which never name a brand. Google AI Overviews come from the same questions searched on Google. A brand counts when the answer names it.</p></div>
+  <div class="card"><div class="ch"><h3>Share of answers that name each brand</h3></div><div class="engines">${engs.map(e => `<div class="eng"><div class="hd"><b>${ENG[e]}</b><span class="small muted">most named: ${esc(best.find(x => x[0] === e)[1].brand)}</span></div>${hbars("share_of_ai_answer_pct|" + e)}</div>`).join("")}</div></div>
+  <div class="grid g2">
+    <div class="card"><div class="ch"><h3>Which brand each assistant names first</h3><p class="small muted">Each bar splits the answers that name at least one brand by the brand named first.</p></div>
+      ${engs.map(e => `<div class="grid" style="gap:6px"><span class="small"><b>${ENG[e]}</b></span>${stack(e)}</div>`).join("")}
+      <div class="legend">${B.map(b => `<span><i style="background:${COL[b.brand_id]}"></i>${esc(b.brand)}</span>`).join("")}</div></div>
+    <div class="card"><div class="ch"><h3>Websites the assistants cite most</h3><p class="small muted">The count covers links cited in ChatGPT, Gemini and Google AI Overview answers. These sites shape what the assistants recommend.</p></div>
+      ${(() => { const mx = Math.max(...D.ai.sources.map(s => s.citations), 1); return D.ai.sources.map(s => `<div class="hb"><span class="nm">${esc(s.cited_host)}</span><div class="bar"><b style="width:${s.citations / mx * 100}%;background:var(--accent)"></b></div><span class="val">${fmt(s.citations)}</span></div>`).join("") || '<p class="empty">No citations collected.</p>'; })()}</div>
+  </div>
+  <div class="card"><div class="ch"><h3>Answer explorer</h3><p class="small muted">Each circle is a brand the assistant named, numbered in the order it appears in the answer.</p></div>
+    <div class="filter" id="pf"><button type="button" data-f="all" aria-pressed="${promptFilter === "all"}">All questions</button><button type="button" data-f="missing" aria-pressed="${promptFilter === "missing"}">${esc(FOC.brand)} not named</button>${RIV.map(r => `<button type="button" data-f="${r.brand_id}" aria-pressed="${promptFilter === r.brand_id}"><i class="dot" style="background:${COL[r.brand_id]};width:9px;height:9px"></i>${esc(r.brand)} named</button>`).join("")}</div>
+    <div class="legend">${B.map(b => `<span><i style="background:${COL[b.brand_id]};border-radius:50%"></i>${esc(b.brand)}</span>`).join("")}</div>
+    <div class="prompts"><div class="prow hdr"><span>Question</span>${Object.keys(ENG).map(e => `<span>${ENG[e]}</span>`).join("")}</div>
+    ${rows.map(p => `<div class="prow"><span class="q">${esc(p.prompt)}</span>${Object.keys(ENG).map(e => `<span>${named(p, e)}</span>`).join("")}</div>`).join("") || '<p class="empty">No question matches this filter.</p>'}</div></div>`;
+}
+
+function donut(parts) {
+  const tot = parts.reduce((s, p) => s + p.v, 0) || 1; let a0 = -Math.PI / 2; const R = 70, r = 46, cx = 90, cy = 90;
+  const arcs = parts.map(p => { const a1 = a0 + p.v / tot * Math.PI * 2, L = a1 - a0 > Math.PI ? 1 : 0;
+    const d = `M${cx + R * Math.cos(a0)},${cy + R * Math.sin(a0)} A${R},${R} 0 ${L} 1 ${cx + R * Math.cos(a1)},${cy + R * Math.sin(a1)} L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} A${r},${r} 0 ${L} 0 ${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} Z`;
+    a0 = a1; return `<path d="${d}" fill="${p.c}" stroke="var(--surface)" stroke-width="2"><title>${esc(p.l)}: ${fmt(p.v / tot * 100)}%</title></path>`; }).join("");
+  return `<svg viewBox="0 0 180 180" width="180" height="180" role="img" aria-label="Share of organic results">${arcs}</svg>`;
+}
+function search() {
+  const ks = D.search.keywords; if (!ks.length) return `<div class="head"><h2>Google results are still being collected</h2></div>`;
+  const shares = B.map(b => ({b, v: M(b.brand_id, "search_top10_share_pct") ?? 0}));
+  const other = Math.max(0, 100 - shares.reduce((s, x) => s + x.v, 0));
+  const fs = M(FOC.brand_id, "search_top10_share_pct"), aio = M(FOC.brand_id, "ai_overview_rate_pct");
+  const ads = B.map(b => ({b, v: M(b.brand_id, "paid_ads_seen") ?? 0})), adTot = ks.reduce((s, k) => s + (k.ads || 0), 0);
+  const posColor = p => p == null ? "" : `background:color-mix(in oklab, var(--accent) ${Math.round(85 - (p - 1) * 7.5)}%, var(--surface));color:${p <= 4 ? "#fff" : "var(--ink)"}`;
+  return `<div class="head"><h2>${esc(FOC.brand)} holds ${fmt(fs, 1)}% of organic top-10 Google results on ${ks.length} category searches</h2><p class="muted">The searches are category keywords without brand names. A result counts for a brand when it links to one of the brand's own sites. Publishers, comparison sites and retailers hold the rest.</p></div>
+  <div class="grid g3">
+    <div class="card"><div class="ch"><h3>Share of organic top-10 results</h3></div><div class="donutwrap">${donut([...shares.map(x => ({v: x.v, c: COL[x.b.brand_id], l: x.b.brand})), {v: other, c: "var(--grid)", l: "Other sites"}])}
+      <div class="legend" style="display:grid;gap:8px">${shares.map(x => `<span><i style="background:${COL[x.b.brand_id]}"></i>${esc(x.b.brand)} <b class="mono">${fmt(x.v, 1)}%</b></span>`).join("")}<span><i style="background:var(--grid)"></i>Other sites <b class="mono">${fmt(other, 0)}%</b></span></div></div></div>
+    <div class="card"><div class="ch"><h3>Paid Google results on these searches</h3><p class="small muted">${adTot} paid results appeared across ${ks.filter(k => k.ads).length} of ${ks.length} searches.</p></div>
+      ${(() => { const mx = Math.max(...ads.map(a => a.v), 1); return ads.map(a => `<div class="hb"><span class="nm">${esc(a.b.brand)}</span><div class="bar"><b style="width:${a.v / mx * 100}%;background:${COL[a.b.brand_id]}"></b></div><span class="val">${fmt(a.v)}</span></div>`).join(""); })()}</div>
+    <div class="card"><div class="ch"><h3>Searches that show a Google AI Overview</h3><p class="small muted">An AI Overview answers the search before any link, so fewer people click through.</p></div>
+      <div class="big">${fmt(aio)}%</div><p class="small muted">${ks.filter(k => k.aio).length} of ${ks.length} category searches show one.</p></div>
+  </div>
+  <div class="card"><div class="ch"><h3>Google position by keyword</h3><p class="small muted">Each cell shows the brand's best organic position on page one. Darker is higher. A dash means the brand's own site is not on page one.</p></div>
+    <div class="scroll"><table class="kwm"><thead><tr><th>Keyword</th>${B.map(b => `<th style="text-align:center"><span class="brandcell" style="justify-content:center;font:500 11px var(--f-mono)"><i class="dot" style="background:${COL[b.brand_id]}"></i>${esc(b.brand)}</span></th>`).join("")}</tr></thead><tbody>
+    ${ks.map(k => `<tr><td class="kw" title="${esc(k.keyword)}">${esc(k.keyword)}${k.aio ? '<span class="flag">AI Overview</span>' : ""}${k.ads ? `<span class="flag ad">${k.ads} ads</span>` : ""}</td>${B.map(b => { const p = k.positions[b.brand_id];
+      return `<td class="cellp" style="${posColor(p)}" data-tip="${esc(b.brand)} on '${esc(k.keyword)}': ${p ? "position " + p : "not on page one"}">${p ?? "–"}</td>`; }).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+}
+
+function voice() {
+  const sov = (D.voice.sov || []).slice().sort((a, b) => b.share_of_voice_pct - a.share_of_voice_pct);
+  if (!sov.length) return `<div class="head"><h2>News coverage is still being collected</h2></div>`;
+  const leader = sov[0], f = sov.find(x => x.brand_id === FOC.brand_id) || {};
+  const h = leader.brand_id === FOC.brand_id ? `${FOC.brand} leads news coverage with ${fmt(f.share_of_voice_pct)}% of articles among its rivals` : `${NAME[leader.brand_id]} leads news coverage with ${fmt(leader.share_of_voice_pct)}%, against ${fmt(f.share_of_voice_pct)}% for ${FOC.brand}`;
+  const sentRow = (key, label) => `<div class="grid" style="gap:6px"><span class="small"><b>${label}</b></span>${B.map(b => { const v = M(b.brand_id, key);
+    return `<div class="drow" style="grid-template-columns:110px 1fr 46px"><span>${esc(b.brand)}</span><div class="track"><span class="zero"></span>${v == null ? "" : `<span class="ln" style="left:${Math.min(50, 50 + v / 2)}%;width:${Math.abs(v) / 2}%;background:${COL[b.brand_id]};opacity:1;height:10px;transform:translateY(-5px);border-radius:3px"></span>`}</div><span class="mono small" style="text-align:right">${v == null ? "–" : (v > 0 ? "+" : "") + fmt(v)}</span></div>`; }).join("")}</div>`;
+  return `<div class="head"><h2>${esc(h)}</h2><p class="muted">Share of voice divides each brand's Google News articles per day over the last 90 days by the total for the four brands. Snowflake Cortex gives every headline and Reddit thread a sentiment.</p></div>
+  <div class="card"><div class="ch"><h3>Share of news coverage, last 90 days</h3></div>
+    <div class="stack100" style="height:40px">${sov.map(r => `<span style="width:${r.share_of_voice_pct}%;background:${COL[r.brand_id]};font-size:12.5px" data-tip="${esc(NAME[r.brand_id])}: ${fmt(r.share_of_voice_pct)}%, ${fmt(r.news_per_day, 1)} articles a day">${r.share_of_voice_pct >= 12 ? esc(NAME[r.brand_id]) + " " : ""}${r.share_of_voice_pct >= 5 ? fmt(r.share_of_voice_pct) + "%" : ""}</span>`).join("")}</div>
+    <div class="legend">${sov.map(r => `<span><i style="background:${COL[r.brand_id]}"></i>${esc(NAME[r.brand_id])}: ${fmt(r.news_per_day, 1)} articles a day</span>`).join("")}</div></div>
+  <div class="grid g2">
+    <div class="card"><div class="ch"><h3>Net sentiment, from −100 to +100</h3><p class="small muted">The score is positive minus negative items, as a share of all items.</p></div>${sentRow("news_net_sentiment_pct", "News headlines")}${sentRow("reddit_net_sentiment_pct", "Reddit threads")}</div>
+    <div class="card"><div class="ch"><h3>Latest headlines</h3></div><div class="feed">${D.voice.headlines.slice(0, 10).map(n => `<div class="fi"><span class="d">${esc(n.published)}</span><div class="t">${bchip(n.brand_id)}<span class="sent ${esc(n.sentiment)}" title="${esc(n.sentiment)}"></span>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a>` : esc(n.title)} <span class="small muted">${esc(n.source || "")}</span></div></div>`).join("")}</div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><div class="ch"><h3>Market moves by ${esc(FOC.brand)} and its rivals</h3></div><div class="feed">${D.voice.moves.map(m => `<div class="fi"><span class="d">${esc(m.move_date)}</span><div class="t">${bchip(m.brand_id)}<span class="chip">${esc(m.move_type)}</span> ${esc(m.headline)} <span class="small">${link(m.source_url)}</span></div></div>`).join("") || '<p class="empty">No moves found.</p>'}</div></div>
+    <div class="card"><div class="ch"><h3>Risk events in the last 12 months</h3></div><div class="feed">${D.voice.risks.map(r => `<div class="fi"><span class="d">${esc(r.event_date)}</span><div class="t">${bchip(r.brand_id)}<span class="sev ${esc(r.severity)}">${esc(r.severity)}</span>${esc(r.detail)} <span class="small">${link(r.source_url)}</span></div></div>`).join("") || '<p class="empty">No risk events found.</p>'}</div></div>
+  </div>`;
+}
+
+let themeSource = null;
+function cx() {
+  const R = D.cx; const chans = [...new Set(R.ratings.map(r => r.channel))].filter(c => CH[c]);
+  const metroBy = {}; R.metros.forEach(r => (metroBy[r.metro] = metroBy[r.metro] || {})[r.brand_id] = r.rating);
+  const hasMaps = R.metros.length > 0;
+  const sources = [...new Set(R.themes.map(t => t.source))]; themeSource = themeSource && sources.includes(themeSource) ? themeSource : sources[0];
+  const T = R.themes.filter(t => t.source === themeSource);
+  const themeRows = Object.keys(THEME).map(th => { const f = T.find(t => t.theme === th && t.brand_id === FOC.brand_id); const rv = avg(T.filter(t => t.theme === th && t.brand_id !== FOC.brand_id && t.mentions >= 5).map(t => t.net_sentiment));
+    return f && f.mentions >= 5 && rv != null ? {th, f: f.net_sentiment, r: rv, n: f.mentions} : null; }).filter(Boolean).sort((a, b) => (a.f - a.r) - (b.f - b.r));
+  const worst = themeRows[0];
+  const h = worst && worst.f - worst.r < 0 ? `Customers rate ${THEME[worst.th].toLowerCase()} ${fmt(Math.abs(worst.f - worst.r))} points below the rival average` : `${FOC.brand} customers rate it at or above its rivals on every major theme`;
+  const cell = (v, label) => v == null ? `<td class="hc" style="color:var(--faint);background:var(--surface-2)">–</td>` : `<td class="hc" style="background:color-mix(in oklab, var(--accent) ${Math.round(8 + (v - 1) / 4 * 72)}%, var(--surface));color:${v >= 3.2 ? "#fff" : "var(--ink)"}" data-tip="${esc(label)}: ${fmt(v, 2)} out of 5">${fmt(v, 1)}</td>`;
+  return `<div class="head"><h2>${esc(h)}</h2><p class="muted">Snowflake Cortex tags the themes in every Google Maps review and Reddit thread, then scores each theme's sentiment. Net sentiment runs from −100 to +100.</p></div>
+  <div class="grid g2">
+    <div class="card"><div class="ch"><h3>Theme sentiment against the rival average</h3>
+      <div class="filter">${sources.map(s => `<button type="button" data-ts="${s}" aria-pressed="${s === themeSource}">${s === "google_maps" ? "Google Maps reviews" : "Reddit threads"}</button>`).join("")}</div></div>
+      <div class="legend"><span><i style="background:var(--b0);border-radius:50%"></i>${esc(FOC.brand)}</span><span><i style="background:var(--faint);border-radius:50%"></i>Rival average</span></div>
+      <div class="div">${themeRows.map(x => { const p = v => 50 + v / 2, lo = Math.min(p(x.f), p(x.r)), hi = Math.max(p(x.f), p(x.r)), g = x.f - x.r;
+        return `<div class="drow"><span>${THEME[x.th]}</span><div class="track"><span class="zero"></span><span class="ln" style="left:${lo}%;width:${hi - lo}%"></span><span class="dt" style="left:${p(x.r)}%;background:var(--faint)" data-tip="Rival average: ${fmt(x.r)}"></span><span class="dt" style="left:${p(x.f)}%;background:var(--b0)" data-tip="${esc(FOC.brand)}: ${fmt(x.f)}, ${x.n} mentions"></span></div><span class="mono small" style="text-align:right;color:${g >= 0 ? "var(--good)" : "var(--bad)"}">${g >= 0 ? "+" : "−"}${fmt(Math.abs(g))}</span></div>`; }).join("") || '<p class="empty">Not enough mentions to compare themes.</p>'}
+      <div class="axis"><span></span><div class="ticks"><span>−100</span><span>0</span><span>+100</span></div><span></span></div></div></div>
+    <div class="card"><div class="ch"><h3>Ratings by channel, out of 5</h3><p class="small muted">Darker cells mean higher ratings.${hasMaps ? " The Google Maps column shows the average rating of the sampled locations." : ""}</p></div>
+      <div class="scroll"><table class="heat"><thead><tr><th>Brand</th>${chans.map(c => `<th style="text-align:center">${CH[c]}</th>`).join("")}${hasMaps ? '<th style="text-align:center">Google Maps</th>' : ""}</tr></thead><tbody>
+      ${B.map(b => `<tr><td><span class="brandcell"><i class="dot" style="background:${COL[b.brand_id]}"></i>${esc(b.brand)}</span></td>${chans.map(c => { const r = R.ratings.find(x => x.brand_id === b.brand_id && x.channel === c); return cell(r ? r.rating : null, `${b.brand} on ${CH[c]}`); }).join("")}${hasMaps ? cell(M(b.brand_id, "location_rating"), `${b.brand} locations`) : ""}</tr>`).join("")}
+      </tbody></table></div></div>
+  </div>
+  ${hasMaps ? `<div class="card"><div class="ch"><h3>${esc(FOC.brand)} location rating by metro</h3><p class="small muted">Each tile shows the average rating of up to 20 Google Maps locations. A red border means the best rival in that metro has a higher rating.</p></div>
+    <div class="metros">${Object.keys(metroBy).sort((a, b) => (metroBy[a][FOC.brand_id] ?? 9) - (metroBy[b][FOC.brand_id] ?? 9)).map(mt => { const f = metroBy[mt][FOC.brand_id]; const rv = RIV.map(r => [r, metroBy[mt][r.brand_id]]).filter(x => x[1] != null).sort((a, b) => b[1] - a[1])[0];
+      const behind = f != null && rv && f < rv[1];
+      return `<div class="metro" style="${behind ? "border-color:var(--bad);" : ""}"><span class="mn">${esc(mt)}</span><span class="mv">${fmt(f, 2)}</span><span class="small muted">${rv ? `Best rival: ${esc(rv[0].brand)} ${fmt(rv[1], 2)}` : "No rival data"}</span></div>`; }).join("")}</div></div>` : ""}
+  <div class="card"><div class="ch"><h3>What ${esc(FOC.brand)} customers say</h3></div><div class="quotes">
+    ${R.quotes.map(q => `<div class="qt ${q.sentiment === "negative" ? "neg" : "pos"}"><span class="tag">${esc(THEME[q.theme] || q.theme)} · ${q.source === "google_maps" ? "Google Maps" : "Reddit"}</span><span>“${esc(q.quote)}”</span>${q.url ? `<span class="small">${link(q.url, "Read the full post")}</span>` : ""}</div>`).join("") || '<p class="empty">No quotes yet.</p>'}
+    ${R.summaries.map(s => `<div class="qt"><span class="tag">AI summary · ${esc(CH[s.channel] || s.channel)}</span><span>${esc(s.ai_summary)}</span></div>`).join("")}</div></div>`;
+}
+
+function account() {
+  const A = D.account, c = A.company || {};
+  if (!c.name) return `<div class="head"><h2>The account brief is still running</h2></div>`;
+  const has = v => A.stack.some(s => s.vendor === v), plat = ["Snowflake", "Databricks"].filter(has);
+  const h = `${D.company.company} runs ${A.units.length} business units, and its data stack includes ${plat.length ? list(plat) : "no Snowflake or Databricks evidence"}`;
+  const st = s => `<span class="chip ${s === "in_use" ? "good" : s === "migrating_from" ? "bad" : "warn"}">${esc((s || "").replace("_", " "))}</span>`;
+  return `<div class="head"><h2>${esc(h)}</h2><p class="muted">The account brief agent ran once for the whole company and once for each of the four largest business units. Every item links to its source.</p></div>
+  <div class="card"><div class="facts">
+    <div class="fact"><span>Industry</span><b>${esc(String(c.industry || "–").split(/[;(]/)[0].trim())}</b></div>
+    <div class="fact"><span>Headquarters</span><b>${esc(c.hq || "–")}</b></div>
+    <div class="fact"><span>Revenue</span><b>${c.revenue_usd ? "$" + fmt(c.revenue_usd / 1e9, 1) + "B" : "–"}</b> <span class="small muted" style="display:inline;text-transform:none;letter-spacing:0">${esc(c.revenue_period || "")}</span></div>
+    <div class="fact"><span>Employees</span><b>${c.employees ? fmt(c.employees) : "–"}</b></div>
+    <div class="fact"><span>Ticker</span><b>${esc(c.ticker || "–")}</b></div></div>
+    <p>${esc(c.description || "")} <span class="small">${link(c.source_url)}</span></p></div>
+  <div class="grid g2">
+    <div class="card"><div class="ch"><h3>Data and AI stack</h3><p class="small muted">Each vendor merges every mention across the company run and the unit runs. Evidence comes from job postings, vendor case studies, talks and press.</p></div>
+      <div>${A.stack.map(s => `<div class="vend ${["Snowflake", "Databricks"].includes(s.vendor) ? "hl" : ""}"><div class="vn">${esc(s.vendor)}<span>${st(s.status)}</span></div>
+        <div class="small"><div class="chips">${String(s.units || "").split(" | ").filter(Boolean).slice(0, 5).map(u => `<span class="chip">${esc(u.length > 40 ? u.slice(0, 38) + "…" : u)}</span>`).join("")}</div>
+        <p style="margin-top:6px">${esc(s.example || "")} <span class="muted">${s.evidence_count} mention${s.evidence_count == 1 ? "" : "s"} · ${link(s.source_url)}</span></p></div></div>`).join("")}</div></div>
+    <div class="grid" style="gap:18px;align-content:start">
+      <div class="card"><div class="ch"><h3>Openings for Snowflake</h3></div>${A.angles.map(a => `<div class="angle"><b>${esc(a.angle)}</b><span class="small">${esc(a.talking_point)}</span><span class="chips"><span class="chip">${esc(a.unit)}</span><span class="chip">${esc(a.snowflake_product)}</span></span></div>`).join("")}</div>
+      <div class="card"><div class="ch"><h3>Decision makers for data, AI and marketing</h3></div><div class="people">${A.leaders.map(l => `<div class="person"><span class="pn">${l.linkedin_url && String(l.linkedin_url).startsWith("http") ? `<a href="${esc(l.linkedin_url)}" target="_blank" rel="noopener">${esc(l.name)}</a>` : esc(l.name)}</span><span class="small">${esc(l.title)}</span><span class="small muted">${esc(l.unit || "")}</span></div>`).join("")}</div></div>
+    </div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><div class="ch"><h3>Trigger events in the last 12 months</h3></div><div class="feed">${A.events.map(e => `<div class="fi"><span class="d">${esc(e.event_date)}</span><div class="t"><span class="chip">${esc((e.event_type || "").replace(/_/g, " "))}</span> ${esc(e.headline)} <span class="small">${link(e.source_url)}</span></div></div>`).join("")}</div></div>
+    <div class="card"><div class="ch"><h3>Strategic initiatives</h3></div><div class="feed">${A.strategy.map(s => `<div class="fi" style="grid-template-columns:1fr"><div class="t"><b>${esc(s.initiative)}</b><p class="small muted">${esc(s.data_ai_link || "")}</p></div></div>`).join("")}</div></div>
+    <div class="card"><div class="ch"><h3>Business units</h3></div><div class="feed">${A.units.map(u => `<div class="fi" style="grid-template-columns:1fr"><div class="t"><b>${esc(u.unit)}</b><p class="small muted">${esc(u.head || "")}</p></div></div>`).join("")}</div></div>
+  </div>
+  ${sourcesCard(A.sources || [])}`;
+}
+
+const SEC = {company: "Company profile", units: "Business units", leaders: "Decision makers", stack: "Data and AI stack",
+  strategy: "Strategy", news: "Trigger events", risks: "Risks"};
+function sourcesCard(src) {
+  if (!src.length) return "";
+  const sites = new Set(src.map(s => host(s.url)));
+  const groups = Object.keys(SEC).map(k => [k, src.filter(s => s.sections[0] === k)]).filter(g => g[1].length);
+  const short = u => { try { const x = new URL(u); let p = decodeURIComponent(x.pathname).replace(/\/$/, ""); if (p.length > 70) p = p.slice(0, 68) + "…"; return x.hostname.replace(/^www\./, "") + p; } catch { return u; } };
+  const item = (s, i) => `<li class="src"><span class="sn mono">${i}</span><div class="sb"><a href="${esc(s.url)}" target="_blank" rel="noopener" class="mono">${esc(short(s.url))}</a>
+    ${s.labels.length ? `<span class="sup">Supports: ${esc(s.labels.slice(0, 3).map(l => l.length > 70 ? l.slice(0, 68).trim() + "…" : l).join("; "))}${s.labels.length > 3 ? ` and ${s.labels.length - 3} more` : ""}</span>` : ""}
+    <div class="sm">${s.date ? `<span class="mono">${esc(s.date)}</span>` : ""}${s.sections.map(x => `<span class="chip">${esc(SEC[x] || x)}</span>`).join("")}</div></div></li>`;
+  let n = 0;
+  return `<div class="card"><div class="ch"><h3>Sources</h3><p class="small muted">The account brief cites ${src.length} pages from ${sites.size} websites. Each source is listed once, under the first section it supports.</p></div>
+    <div class="srcgrid">${groups.map(([k, items]) => `<div class="srcg"><div class="srch">${esc(SEC[k])} <span class="mono muted">${items.length}</span></div><ol class="srcl">${items.map(s => item(s, ++n)).join("")}</ol></div>`).join("")}</div></div>`;
+}
+const VIEWS = {overview, ai, search, voice, cx, account};
+let cur = TABS.some(t => "#" + t[0] === location.hash) ? location.hash.slice(1) : "account";
+function render() {
+  document.getElementById("tabs").innerHTML = TABS.map(([k, l]) => `<button type="button" role="tab" data-k="${k}" aria-selected="${k === cur}">${l}</button>`).join("");
+  document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => { cur = b.dataset.k; render(); window.scrollTo(0, 0); });
+  document.getElementById("main").innerHTML = `<section class="view">${VIEWS[cur]()}</section>`;
+  document.querySelectorAll("#pf button").forEach(b => b.onclick = () => { promptFilter = b.dataset.f; render(); });
+  document.querySelectorAll("[data-ts]").forEach(b => b.onclick = () => { themeSource = b.dataset.ts; render(); });
+}
+document.addEventListener("mouseover", e => { const t = e.target.closest("[data-tip]"); if (!t) { tip.style.opacity = 0; return; } tip.textContent = t.dataset.tip; tip.style.opacity = 1; });
+document.addEventListener("mousemove", e => { tip.style.left = Math.min(e.clientX + 14, innerWidth - 300) + "px"; tip.style.top = (e.clientY + 14) + "px"; });
+hero(); render();
+</script>
+</body></html>
